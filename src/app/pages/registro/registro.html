@@ -1,0 +1,120 @@
+<div class="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-6 font-sans">
+  <!-- Decorative background elements -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 blur-[128px] rounded-full"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 blur-[128px] rounded-full"></div>
+  </div>
+
+  <div class="w-full max-w-2xl relative z-10">
+    <div class="text-center mb-8">
+      <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 mb-4 cursor-pointer" routerLink="/">
+        <i class="bi bi-clock-fill text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">Hazte una cuenta</h1>
+      <p class="text-zinc-400 mt-2">Únete a FichAPP y gestiona tu tiempo sin esfuerzos</p>
+    </div>
+
+    <div class="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 p-8 rounded-[2.5rem] shadow-2xl">
+      <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Nombre -->
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-2">Nombre</label>
+            <input 
+              type="text" 
+              formControlName="nombre"
+              placeholder="Tu nombre"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+
+          <!-- Puesto -->
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-2">Puesto de trabajo</label>
+            <input 
+              type="text" 
+              formControlName="puesto"
+              placeholder="Ej: Desarrollador"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+
+          <!-- Apellido 1 -->
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-2">Primer Apellido</label>
+            <input 
+              type="text" 
+              formControlName="apellido1"
+              placeholder="Apellido"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+
+          <!-- Apellido 2 -->
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-2">Segundo Apellido</label>
+            <input 
+              type="text" 
+              formControlName="apellido2"
+              placeholder="Opcional"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-2">Email</label>
+            <input 
+              type="email" 
+              formControlName="email"
+              placeholder="nombre@empresa.com"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-sm font-medium text-zinc-300 mb-2">Contraseña</label>
+          <div class="relative">
+            <i class="bi bi-lock absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+            <input 
+              type="password" 
+              formControlName="password"
+              placeholder="••••••••"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-zinc-600"
+            >
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl text-sm text-center">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button 
+          type="submit" 
+          [disabled]="registroForm.invalid || isLoading()"
+          class="w-full h-14 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          @if (isLoading()) {
+            <span class="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            Creando cuenta...
+          } @else {
+            Registrarse
+          }
+        </button>
+      </form>
+
+      <div class="mt-8 text-center border-t border-zinc-800 pt-6">
+        <p class="text-zinc-500 text-sm">
+          ¿Ya tienes cuenta? 
+          <a routerLink="/login" class="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">Inicia sesión</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,141 @@
+<div class="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6 md:p-10">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+      <div>
+        <h1 class="text-3xl font-black text-white mb-1">Panel de <span class="text-indigo-500">Administrador</span></h1>
+        <p class="text-zinc-500 font-medium">Gestión global de presencia y turnos.</p>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-3">
+            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-sm font-bold text-zinc-300">Sistema Activo</span>
+        </div>
+        <button (click)="logout()" class="h-12 w-12 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 transition-all">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-indigo-500/30 transition-all group">
+        <div class="h-10 w-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
+          <i class="bi bi-people"></i>
+        </div>
+        <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Total Plantilla</p>
+        <p class="text-3xl font-black text-white">{{ stats().totalEmployees }}</p>
+      </div>
+
+      <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-emerald-500/30 transition-all group">
+        <div class="h-10 w-10 rounded-xl bg-emerald-600/10 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
+          <i class="bi bi-person-check"></i>
+        </div>
+        <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Activos Ahora</p>
+        <p class="text-3xl font-black text-white">{{ stats().activeNow }}</p>
+      </div>
+
+      <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-purple-500/30 transition-all group">
+        <div class="h-10 w-10 rounded-xl bg-purple-600/10 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Media Semanal</p>
+        <p class="text-3xl font-black text-white">{{ stats().averageHours }}h</p>
+      </div>
+
+      <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-red-500/30 transition-all group">
+        <div class="h-10 w-10 rounded-xl bg-red-600/10 flex items-center justify-center text-red-400 mb-4 group-hover:scale-110 transition-transform">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Retrasos Hoy</p>
+        <p class="text-3xl font-black text-white">{{ stats().lateArrivals }}</p>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Activity Feed -->
+      <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800/50 rounded-[2.5rem] p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="text-xl font-black text-white">Últimos Movimientos</h3>
+            <button class="text-sm font-bold text-indigo-400 hover:text-indigo-300">Ver todo <i class="bi bi-arrow-right"></i></button>
+        </div>
+
+        <div class="overflow-hidden">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-black border-b border-zinc-800">
+                        <th class="pb-4">Empleado</th>
+                        <th class="pb-4">Acción</th>
+                        <th class="pb-4">Hora</th>
+                        <th class="pb-4 text-right">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/50">
+                    @for (activity of recentActivity(); track activity.name + activity.time) {
+                        <tr class="group hover:bg-zinc-800/20 transition-colors">
+                            <td class="py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-400">
+                                        {{ activity.name.charAt(0) }}
+                                    </div>
+                                    <span class="text-sm font-bold text-zinc-100">{{ activity.name }}</span>
+                                </div>
+                            </td>
+                            <td class="py-5">
+                                <span [class.text-emerald-400]="activity.action === 'Entrada'" 
+                                      [class.text-purple-400]="activity.action !== 'Entrada'" 
+                                      class="text-xs font-bold bg-white/5 px-2 py-1 rounded-md">
+                                    {{ activity.action }}
+                                </span>
+                            </td>
+                            <td class="py-5 text-sm font-mono text-zinc-400">{{ activity.time }}</td>
+                            <td class="py-5 text-right">
+                                <span [class.bg-emerald-500/10]="activity.status === 'On-time' || activity.status === 'Completed'"
+                                      [class.text-emerald-500]="activity.status === 'On-time' || activity.status === 'Completed'"
+                                      [class.bg-red-500/10]="activity.status === 'Late'"
+                                      [class.text-red-500]="activity.status === 'Late'"
+                                      class="text-[10px] font-black uppercase px-2 py-1 rounded">
+                                    {{ activity.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+      </div>
+
+      <!-- Quick Actions / Sidebar -->
+      <div class="space-y-6">
+          <div class="bg-indigo-600 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
+              <div class="absolute -right-6 -bottom-6 opacity-10 group-hover:rotate-12 transition-transform">
+                  <i class="bi bi-file-earmark-bar-graph text-[120px]"></i>
+              </div>
+              <h4 class="text-xl font-black text-white mb-2">Generar Informe</h4>
+              <p class="text-white/70 text-sm mb-6">Obtén el resumen detallado de la plantilla para el mes actual.</p>
+              <button class="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm shadow-xl">Descargar PDF</button>
+          </div>
+
+          <div class="bg-zinc-900/40 border border-zinc-800/50 rounded-[2.5rem] p-8">
+              <h4 class="text-lg font-black text-white mb-6">Gestión Rápida</h4>
+              <div class="grid grid-cols-1 gap-4">
+                  <button class="flex items-center gap-4 p-4 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl hover:bg-zinc-900 transition-colors w-full text-left">
+                      <div class="h-10 w-10 rounded-xl bg-orange-600/10 flex items-center justify-center text-orange-400">
+                          <i class="bi bi-person-plus"></i>
+                      </div>
+                      <span class="font-bold text-zinc-200">Nuevo Empleado</span>
+                  </button>
+                  <button class="flex items-center gap-4 p-4 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl hover:bg-zinc-900 transition-colors w-full text-left">
+                      <div class="h-10 w-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+                          <i class="bi bi-calendar-event"></i>
+                      </div>
+                      <span class="font-bold text-zinc-200">Calendario Festivos</span>
+                  </button>
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>

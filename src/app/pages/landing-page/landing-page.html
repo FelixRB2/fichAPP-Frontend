@@ -1,0 +1,97 @@
+<div class="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+  <!-- Minimal Dark Navigation -->
+  <header class="h-20 flex items-center border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="container mx-auto px-6 flex items-center justify-between">
+      <div class="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-80" routerLink="/">
+        <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <i class="bi bi-clock-fill"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white">Fich<span class="text-indigo-500">APP</span></span>
+      </div>
+      
+      <div class="flex items-center gap-6">
+        <a routerLink="/login" class="text-sm font-semibold text-zinc-400 hover:text-white transition-colors">Iniciar Sesión</a>
+        <a routerLink="/registro" class="hidden sm:inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-zinc-950 hover:bg-zinc-200 transition-colors">
+          Probar Gratis
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Simple Hero Section - Dark Mode -->
+    <section class="py-20 md:py-32 relative overflow-hidden">
+      <!-- Minimal Glow -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[400px] bg-indigo-600/5 blur-[120px] rounded-full"></div>
+      
+      <div class="container mx-auto px-6 text-center max-w-4xl relative">
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]">
+          El control horario, <span class="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">sin complicaciones.</span>
+        </h1>
+        <p class="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          Cumple con la ley de registro de jornada de la forma más rápida y sencilla. Sin mil opciones que no necesitas, solo lo esencial.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a routerLink="/registro" class="flex h-14 w-full sm:w-auto items-center justify-center rounded-full bg-indigo-600 px-10 text-lg font-bold text-white shadow-xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all hover:-translate-y-0.5 active:translate-y-0">
+            Empieza ahora
+          </a>
+          <a routerLink="/login" class="flex h-14 w-full sm:w-auto items-center justify-center px-8 font-semibold text-zinc-400 hover:text-white transition-colors">
+            Saber más
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Minimal Features Section - Dark Mode -->
+    <section class="py-20 bg-zinc-900/30 border-y border-zinc-800/50">
+      <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div class="group">
+            <div class="mx-auto h-12 w-12 rounded-2xl bg-zinc-800/50 shadow-sm flex items-center justify-center text-indigo-400 mb-6 border border-zinc-700/50 text-xl font-bold group-hover:border-indigo-500/50 transition-colors">
+              1
+            </div>
+            <h3 class="text-xl font-bold mb-3 text-white">Registra tu entrada</h3>
+            <p class="text-zinc-400">Un solo botón. Desde cualquier dispositivo, en cualquier lugar.</p>
+          </div>
+          <div class="group">
+            <div class="mx-auto h-12 w-12 rounded-2xl bg-zinc-800/50 shadow-sm flex items-center justify-center text-indigo-400 mb-6 border border-zinc-700/50 text-xl font-bold group-hover:border-indigo-500/50 transition-colors">
+              2
+            </div>
+            <h3 class="text-xl font-bold mb-3 text-white">Descarga informes</h3>
+            <p class="text-zinc-400">Genera PDFs legales para inspecciones con un clic.</p>
+          </div>
+          <div class="group">
+            <div class="mx-auto h-12 w-12 rounded-2xl bg-zinc-800/50 shadow-sm flex items-center justify-center text-indigo-400 mb-6 border border-zinc-700/50 text-xl font-bold group-hover:border-indigo-500/50 transition-colors">
+              3
+            </div>
+            <h3 class="text-xl font-bold mb-3 text-white">Analiza las horas</h3>
+            <p class="text-zinc-400">Gráficos simples que te muestran lo que realmente importa.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA - Dark Mode -->
+    <section class="py-24">
+      <div class="container mx-auto px-6 text-center">
+        <h2 class="text-3xl font-bold mb-8 text-white">¿Listo para simplificar tu jornada?</h2>
+        <a routerLink="/registro" class="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 font-semibold text-zinc-950 hover:bg-zinc-200 transition-colors">
+          Crear cuenta gratuita
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-12 border-t border-zinc-800/50 text-sm text-zinc-500">
+    <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-white">FichAPP</span>
+        <span>&copy; 2026. Todos los derechos reservados.</span>
+      </div>
+      <div class="flex items-center gap-8 text-zinc-400">
+        <a href="#" class="hover:text-white transition-colors">Privacidad</a>
+        <a href="#" class="hover:text-white transition-colors">Contacto</a>
+      </div>
+    </div>
+  </footer>
+</div>

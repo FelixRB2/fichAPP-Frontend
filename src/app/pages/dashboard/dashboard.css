@@ -1,0 +1,6 @@
+/* Custom styles for Dashboard */
+:host {
+    display: block;
+}
+
+/* Add any custom animations or overrides here if needed */
