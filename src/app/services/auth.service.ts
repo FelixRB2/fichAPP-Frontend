@@ -12,26 +12,17 @@ export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   async login(credentials: any): Promise<AuthResponse> {
-
     const response = await firstValueFrom(
       this.http.post<AuthResponse>(`${this.baseUrl}/login`, credentials)
     );
 
-  
     console.log('Respuesta completa del servidor:', response);
 
     if (response) {
       localStorage.setItem('token', response.token);
       localStorage.setItem('userRole', response.rol.toLowerCase());
       localStorage.setItem('userId', response.id.toString());
-
-      if (response.user) {
-        localStorage.setItem('userData', JSON.stringify(response.user));
-        console.log('Objeto userData guardado con éxito');
-      } else {
-        localStorage.setItem('userData', JSON.stringify(response));
-        console.warn('El servidor no envió la clave "user", guardando respuesta completa');
-      }
+      localStorage.setItem('userData', JSON.stringify(response));
     }
 
     return response; 

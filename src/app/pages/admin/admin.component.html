@@ -8,9 +8,14 @@
       </div>
       
       <div class="flex items-center gap-4">
-        <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-3">
-            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span class="text-sm font-bold text-zinc-300">Sistema Activo</span>
+        <div class="flex flex-col items-end gap-1">
+            <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-3">
+                <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-sm font-bold text-zinc-300">Sistema Activo</span>
+            </div>
+            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">
+                {{ fechaActual() | date:"EEEE, d 'de' MMMM" | titlecase }}
+            </p>
         </div>
         <button (click)="logout()" class="h-12 w-12 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 transition-all">
           <i class="bi bi-box-arrow-right"></i>
@@ -25,7 +30,7 @@
           <i class="bi bi-people"></i>
         </div>
         <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Total Plantilla</p>
-        <p class="text-3xl font-black text-white">{{ stats().totalEmployees }}</p>
+        <p class="text-3xl font-black text-white">{{ estadisticas().totalEmpleados }}</p>
       </div>
 
       <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-emerald-500/30 transition-all group">
@@ -33,7 +38,7 @@
           <i class="bi bi-person-check"></i>
         </div>
         <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Activos Ahora</p>
-        <p class="text-3xl font-black text-white">{{ stats().activeNow }}</p>
+        <p class="text-3xl font-black text-white">{{ estadisticas().activosAhora }}</p>
       </div>
 
       <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-purple-500/30 transition-all group">
@@ -41,7 +46,7 @@
           <i class="bi bi-clock-history"></i>
         </div>
         <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Media Semanal</p>
-        <p class="text-3xl font-black text-white">{{ stats().averageHours }}h</p>
+        <p class="text-3xl font-black text-white">{{ formatearTiempo(estadisticas().mediaHoras) }}</p>
       </div>
 
       <div class="bg-zinc-900/40 border border-zinc-800/50 p-6 rounded-3xl hover:border-red-500/30 transition-all group">
@@ -49,7 +54,7 @@
           <i class="bi bi-exclamation-triangle"></i>
         </div>
         <p class="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-1">Retrasos Hoy</p>
-        <p class="text-3xl font-black text-white">{{ stats().lateArrivals }}</p>
+        <p class="text-3xl font-black text-white">{{ estadisticas().retrasosHoy }}</p>
       </div>
     </div>
 
@@ -73,31 +78,31 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-800/50">
-                    @for (activity of recentActivity(); track activity.name + activity.time) {
+                    @for (item of actividadReciente(); track item.nombre + item.tiempo) {
                         <tr class="group hover:bg-zinc-800/20 transition-colors">
                             <td class="py-5">
                                 <div class="flex items-center gap-3">
                                     <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-400">
-                                        {{ activity.name.charAt(0) }}
+                                        {{ item.nombre.charAt(0) }}
                                     </div>
-                                    <span class="text-sm font-bold text-zinc-100">{{ activity.name }}</span>
+                                    <span class="text-sm font-bold text-zinc-100">{{ item.nombre }}</span>
                                 </div>
                             </td>
                             <td class="py-5">
-                                <span [class.text-emerald-400]="activity.action === 'Entrada'" 
-                                      [class.text-purple-400]="activity.action !== 'Entrada'" 
+                                <span [class.text-emerald-400]="item.accion === 'Entrada'" 
+                                      [class.text-purple-400]="item.accion !== 'Entrada'" 
                                       class="text-xs font-bold bg-white/5 px-2 py-1 rounded-md">
-                                    {{ activity.action }}
+                                    {{ item.accion }}
                                 </span>
                             </td>
-                            <td class="py-5 text-sm font-mono text-zinc-400">{{ activity.time }}</td>
+                            <td class="py-5 text-sm font-mono text-zinc-400">{{ item.tiempo }}</td>
                             <td class="py-5 text-right">
-                                <span [class.bg-emerald-500/10]="activity.status === 'On-time' || activity.status === 'Completed'"
-                                      [class.text-emerald-500]="activity.status === 'On-time' || activity.status === 'Completed'"
-                                      [class.bg-red-500/10]="activity.status === 'Late'"
-                                      [class.text-red-500]="activity.status === 'Late'"
+                                <span [class.bg-emerald-500/10]="item.estado === 'A tiempo' || item.estado === 'Completado'"
+                                      [class.text-emerald-500]="item.estado === 'A tiempo' || item.estado === 'Completado'"
+                                      [class.bg-red-500/10]="item.estado === 'Tarde'"
+                                      [class.text-red-500]="item.estado === 'Tarde'"
                                       class="text-[10px] font-black uppercase px-2 py-1 rounded">
-                                    {{ activity.status }}
+                                    {{ item.estado }}
                                 </span>
                             </td>
                         </tr>

@@ -1,38 +1,67 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [],
+  imports: [DatePipe, TitleCasePipe],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
-export class AdminDashboard implements OnInit {
+export class PanelAdministrador implements OnInit {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  private enrutador = inject(Router);
 
-  userData = signal<any>(null);
+  datosUsuario = signal<any>(null);
+  fechaActual = signal(new Date());
   
-  stats = signal({
-    totalEmployees: 24,
-    activeNow: 18,
-    averageHours: 38.5,
-    lateArrivals: 2
+  estadisticas = signal({
+    totalEmpleados: 24,
+    activosAhora: 18,
+    mediaHoras: 38.5,
+    retrasosHoy: 2
   });
 
-  recentActivity = signal([
-    { name: 'Carlos Ruíz', action: 'Entrada', time: '08:02', status: 'On-time' },
-    { name: 'Ana Belén', action: 'Entrada', time: '07:55', status: 'On-time' },
-    { name: 'David M.', action: 'Salida', time: '17:30', status: 'Completed' },
-    { name: 'Laura G.', action: 'Entrada', time: '09:15', status: 'Late' },
-    { name: 'Jorge Pérez', action: 'Entrada', time: '08:10', status: 'On-time' },
+  actividadReciente = signal([
+    { nombre: 'Carlos Ruíz', accion: 'Entrada', tiempo: '08:02', estado: 'A tiempo' },
+    { nombre: 'Ana Belén', accion: 'Entrada', tiempo: '07:55', estado: 'A tiempo' },
+    { nombre: 'David M.', accion: 'Salida', tiempo: '17:30', estado: 'Completado' },
+    { nombre: 'Laura G.', accion: 'Entrada', tiempo: '09:15', estado: 'Tarde' },
+    { nombre: 'Jorge Pérez', accion: 'Entrada', tiempo: '08:10', estado: 'A tiempo' },
   ]);
 
   ngOnInit() {
-    this.userData.set(this.authService.getUserData());
+    this.datosUsuario.set(this.authService.getUserData());
+    
+    // Reloj en tiempo real
+    setInterval(() => {
+      this.fechaActual.set(new Date());
+    }, 1000);
+  }
+
+  /**
+   * Formatea un número decimal de horas a una cadena legible (ej: 38.5 -> 38h 30m)
+   * @param valor Horas en formato decimal
+   */
+  formatearTiempo(valor: number | null | undefined): string {
+    if (valor === null || valor === undefined) {
+      return '--:--';
+    }
+
+    // Calculamos minutos totales redondeando
+    const minutosTotales = Math.round(valor * 60);
+    const horas = Math.floor(minutosTotales / 60);
+    const minutos = minutosTotales % 60;
+
+    // Formato amigable para menos de una hora
+    if (horas === 0) {
+      return `${minutos}m`;
+    }
+
+    // Formato estándar Xh YYm para visualización clara
+    return `${horas}h ${minutos.toString().padStart(2, '0')}m`;
   }
 
   logout() {
