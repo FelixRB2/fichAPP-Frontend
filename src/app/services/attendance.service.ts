@@ -11,27 +11,35 @@ export class AttendanceService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/fichajes`;
 
-  async startShift(userId: string, comment: string = ''): Promise<Fichaje> {
+  async iniciarJornada(idUsuario: string, comentario: string = ''): Promise<Fichaje> {
     return await firstValueFrom(
-      this.http.post<Fichaje>(`${this.baseUrl}`, { idUsuario: userId, comentario: comment })
+      this.http.post<Fichaje>(`${this.baseUrl}`, { idUsuario, comentario })
     );
   }
 
-  async stopShift(fichajeId: string): Promise<Fichaje> {
+  async detenerJornada(idFichaje: string): Promise<Fichaje> {
     return await firstValueFrom(
-      this.http.put<Fichaje>(`${this.baseUrl}/${fichajeId}/salida`, {})
+      this.http.put<Fichaje>(`${this.baseUrl}/${idFichaje}/salida`, {})
     );
   }
 
-  async getHistory(userId: string): Promise<Fichaje[]> {
+  async obtenerHistorial(idUsuario: string): Promise<Fichaje[]> {
     return await firstValueFrom(
-      this.http.get<Fichaje[]>(`${this.baseUrl}/usuario/${userId}`)
+      this.http.get<Fichaje[]>(`${this.baseUrl}/usuario/${idUsuario}`)
     );
   }
 
-  async getDashboardData(userId: string): Promise<any> {
-    return await firstValueFrom(
-      this.http.get<any>(`${this.baseUrl}/dashboard/${userId}`)
+  async obtenerDatosDashboard(idUsuario: string): Promise<any> {
+    const datos = await firstValueFrom(
+      this.http.get<any>(`${this.baseUrl}/dashboard/${idUsuario}`)
     );
+
+    // Mapeo selectivo: Backend (Inglés) -> Frontend (Español)
+    return {
+      historialReciente: datos.recentHistory || [],
+      fichajeActivo: datos.activeFichaje || null,
+      horasSemanalesFormateadas: datos.weeklyHours || '0h 00m',
+      porcentajeSemanal: datos.weeklyPercentage || 0
+    };
   }
 }

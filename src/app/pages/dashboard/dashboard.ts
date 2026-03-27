@@ -45,15 +45,15 @@ export class PanelControl implements OnInit {
     if (!idUsuario) return;
 
     try {
-      const datos = await this.attendanceService.getDashboardData(idUsuario);
+      const datos = await this.attendanceService.obtenerDatosDashboard(idUsuario);
       
-      this.historial.set(datos.recentHistory);
-      this.fichajeActivo.set(datos.activeFichaje);
-      this.fichado.set(!!datos.activeFichaje);
-      this.horasSemanales.set(datos.weeklyHours);
-      this.porcentajeSemanal.set(datos.weeklyPercentage);
+      this.historial.set(datos.historialReciente);
+      this.fichajeActivo.set(datos.fichajeActivo);
+      this.fichado.set(!!datos.fichajeActivo);
+      this.horasSemanales.set(datos.horasSemanalesFormateadas);
+      this.porcentajeSemanal.set(datos.porcentajeSemanal);
 
-      if (datos.activeFichaje) {
+      if (datos.fichajeActivo) {
         this.actualizarTemporizador();
       }
     } catch (error) {
@@ -69,10 +69,10 @@ export class PanelControl implements OnInit {
       if (this.fichado()) {
         const activo = this.fichajeActivo();
         if (activo) {
-          await this.attendanceService.stopShift(activo.idFichajes);
+          await this.attendanceService.detenerJornada(activo.idFichajes);
         }
       } else {
-        await this.attendanceService.startShift(idUsuario, 'Entrada desde Dashboard');
+        await this.attendanceService.iniciarJornada(idUsuario, 'Entrada desde Dashboard');
       }
       await this.cargarDatos();
     } catch (error) {
