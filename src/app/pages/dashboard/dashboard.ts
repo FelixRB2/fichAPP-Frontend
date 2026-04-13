@@ -1,14 +1,16 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { DatePipe, UpperCasePipe, NgClass, TitleCasePipe } from '@angular/common';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { DatePipe, UpperCasePipe, NgClass, TitleCasePipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { AttendanceService } from '../../services/attendance.service';
 import { Router } from '@angular/router';
 import { Fichaje } from '../../interface/attendance';
 
+import { Sidebar } from '../admin/sidebar';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, UpperCasePipe, NgClass, TitleCasePipe],
+  imports: [DatePipe, UpperCasePipe, NgClass, TitleCasePipe, CommonModule, Sidebar],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -24,6 +26,42 @@ export class PanelControl implements OnInit {
   tiempoTranscurrido = signal('00:00:00');
   
   historial = signal<Fichaje[]>([]);
+  filtroTemporal = signal<'hoy' | 'semana' | 'mes' | 'todos'>('todos');
+
+  // Historial filtrado dinámico
+  historialFiltrado = computed(() => {
+    const registros = this.historial();
+    const filtro = this.filtroTemporal();
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (filtro === 'todos') return registros;
+
+    return registros.filter(r => {
+      const fechaReg = new Date(r.fecha);
+      fechaReg.setHours(0, 0, 0, 0);
+      
+      if (filtro === 'hoy') {
+        return fechaReg.getTime() === hoy.getTime();
+      }
+      
+      if (filtro === 'semana') {
+        const tempHoy = new Date(hoy);
+        const diff = tempHoy.getDate() - tempHoy.getDay() + (tempHoy.getDay() === 0 ? -6 : 1);
+        const primerDiaSemana = new Date(tempHoy.setDate(diff));
+        primerDiaSemana.setHours(0, 0, 0, 0);
+        return fechaReg >= primerDiaSemana;
+      }
+      
+      if (filtro === 'mes') {
+        return fechaReg.getMonth() === hoy.getMonth() && 
+               fechaReg.getFullYear() === hoy.getFullYear();
+      }
+      
+      return true;
+    });
+  });
+
   horasSemanales = signal('0h 00m');
   porcentajeSemanal = signal(0);
 
@@ -80,6 +118,10 @@ export class PanelControl implements OnInit {
     }
   }
 
+  cambiarFiltro(nuevoFiltro: 'hoy' | 'semana' | 'mes' | 'todos') {
+    this.filtroTemporal.set(nuevoFiltro);
+  }
+
   actualizarTemporizador() {
     const activo = this.fichajeActivo();
     if (!activo) return;
@@ -104,35 +146,13 @@ export class PanelControl implements OnInit {
     return num.toString().padStart(2, '0');
   }
 
-  /**
-   * Convierte un valor de horas decimales (ej: 0.02) a un formato legible por humanos (ej: 1m o 1h 30m)
-   * @param valor El valor numérico de las horas trabajadas
-   * @returns Una cadena formateada para mostrar en la interfaz
-   */
   formatearTiempo(valor: number | null | undefined): string {
-    // Si no hay valor registrado, devolvemos un marcador vacío
-    if (valor === null || valor === undefined) {
-      return '--:--';
-    }
-
-    // Convertimos las horas decimales a minutos totales redondeando para mayor precisión
+    if (valor === null || valor === undefined) return '--:--';
     const minutosTotales = Math.round(valor * 60);
-    
-    // Calculamos cuántas horas completas y cuántos minutos sobran
     const horas = Math.floor(minutosTotales / 60);
     const minutos = minutosTotales % 60;
-
-    // Caso especial: si el tiempo es muy corto (menos de 1 minuto) pero existe actividad
-    if (horas === 0 && minutos === 0 && valor > 0) {
-      return '< 1m';
-    }
-
-    // Si es menos de una hora, mostramos solo los minutos
-    if (horas === 0) {
-      return `${minutos}m`;
-    }
-
-    // Si hay horas, mostramos formato "Xh YYm" asegurando dos dígitos en los minutos
+    if (horas === 0 && minutos === 0 && valor > 0) return '< 1m';
+    if (horas === 0) return `${minutos}m`;
     return `${horas}h ${minutos.toString().padStart(2, '0')}m`;
   }
 

@@ -6,13 +6,13 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const userRole = authService.getRole();
-  const expectedRole = route.data['role'];
+  const userRole = authService.getRole()?.toLowerCase();
+  const expectedRole = route.data['role']?.toLowerCase();
 
-  if (userRole === expectedRole) {
+  if (userRole && expectedRole && (userRole === expectedRole || userRole.includes('admin'))) {
     return true;
   }
 
   alert('No tienes permiso para esta sección');
-  return router.createUrlTree(['/login']);
+  return router.navigate(['/dashboard']);
 };

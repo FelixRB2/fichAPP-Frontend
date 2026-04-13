@@ -1,28 +1,25 @@
-<div class="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6 md:p-10 relative overflow-hidden">
+<app-sidebar></app-sidebar>
+
+<div class="ml-20 lg:ml-64 min-h-screen bg-black text-zinc-100 font-sans p-4 md:p-10 transition-all duration-300 relative overflow-hidden">
   <!-- Dynamic Background -->
-  <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-    <div class="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-indigo-600/30 blur-[160px] rounded-full animate-pulse"></div>
-    <div class="absolute bottom-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-purple-600/30 blur-[160px] rounded-full"></div>
+  <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10">
+    <div class="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-indigo-600/20 blur-[160px] rounded-full animate-pulse"></div>
+    <div class="absolute bottom-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-purple-600/20 blur-[160px] rounded-full"></div>
   </div>
 
   <div class="max-w-6xl mx-auto relative z-10">
     <!-- Header -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-zinc-900 pb-10">
       <div>
-        <h1 class="text-4xl font-extrabold tracking-tight text-white mb-2">
-          Hola, <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">{{ datosUsuario()?.nombre }}</span> 👋
+        <span class="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-2 block">Resumen de Actividad</span>
+        <h1 class="text-4xl font-black tracking-tight text-white leading-none">
+          Hola, <span class="text-zinc-600">{{ datosUsuario()?.nombre }}</span> 👋
         </h1>
-        <p class="text-zinc-400 text-lg">Es un buen momento para gestionar tu tiempo.</p>
       </div>
       
-      <div class="flex items-center gap-4 bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 p-2 rounded-2xl">
-        <div class="hidden md:block px-4 py-2">
-            <p class="text-xs text-zinc-500 uppercase tracking-widest font-bold">Fecha Actual</p>
-            <p class="text-sm font-semibold text-zinc-200">{{ fechaActual() | date:"EEEE, d 'de' MMMM" | titlecase }}</p>
-        </div>
-        <button (click)="logout()" class="h-12 w-12 flex items-center justify-center rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all active:scale-95 shadow-lg">
-          <i class="bi bi-box-arrow-right text-xl"></i>
-        </button>
+      <div class="hidden sm:block text-right">
+          <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-black mb-1">Fecha de Hoy</p>
+          <p class="text-sm font-bold text-zinc-400">{{ fechaActual() | date:"EEEE, d 'de' MMMM" | titlecase }}</p>
       </div>
     </header>
 
@@ -52,9 +49,13 @@
               <button 
                 (click)="commutarFichaje()"
                 [ngClass]="fichado() ? 'bg-red-500/10 text-red-400 ring-2 ring-red-500/20 hover:bg-red-500/20' : 'bg-emerald-500 text-black font-black hover:bg-emerald-400 hover:scale-105'"
-                class="h-24 px-12 rounded-[2rem] text-xl transition-all duration-300 shadow-2xl flex items-center justify-center gap-4"
+                class="h-24 px-12 rounded-[2rem] text-xl transition-all duration-300 shadow-2xl flex items-center justify-center gap-4 cursor-pointer"
               >
-                <i [ngClass]="fichado() ? 'bi-stop-fill' : 'bi-play-fill'" class="text-3xl"></i>
+                @if (fichado()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="lucide lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="lucide lucide-play"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                }
                 {{ fichado() ? 'Detener Jornada' : 'Fichar Entrada' }}
               </button>
             </div>
@@ -63,13 +64,23 @@
 
         <!-- Recent History -->
         <div class="bg-zinc-900/40 backdrop-blur-2xl border border-zinc-800/50 p-8 rounded-[2.5rem] shadow-2xl">
-          <h3 class="text-xl font-bold text-white mb-6">Actividad Reciente</h3>
-          <div class="space-y-4">
-            @for (entry of historial(); track entry.idFichajes) {
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h3 class="text-xl font-bold text-white">Actividad Reciente</h3>
+            
+            <div class="flex gap-1.5 p-1 bg-zinc-950/50 border border-zinc-800/50 rounded-xl">
+              <button (click)="cambiarFiltro('todos')" [class]="filtroTemporal() === 'todos' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all">Todos</button>
+              <button (click)="cambiarFiltro('hoy')" [class]="filtroTemporal() === 'hoy' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all">Hoy</button>
+              <button (click)="cambiarFiltro('semana')" [class]="filtroTemporal() === 'semana' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all">Semana</button>
+              <button (click)="cambiarFiltro('mes')" [class]="filtroTemporal() === 'mes' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all">Mes</button>
+            </div>
+          </div>
+
+          <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            @for (entry of historialFiltrado(); track entry.idFichajes) {
               <div class="flex items-center justify-between p-5 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl hover:border-indigo-500/30 transition-colors group">
                 <div class="flex items-center gap-4">
                   <div class="h-10 w-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400">
-                    <i class="bi bi-calendar-check"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-check"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
                   </div>
                   <div>
                     <p class="font-bold text-zinc-100">{{ entry.fecha | date:'dd/MM/yyyy' }}</p>
