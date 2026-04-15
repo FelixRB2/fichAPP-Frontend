@@ -126,8 +126,17 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom duration-500">
             <div [class]="usuarioSeleccionado() ? 'lg:col-span-2' : 'lg:col-span-3'"
                 class="bg-zinc-900/40 border border-zinc-800/50 rounded-[2.5rem] p-8 transition-all duration-500">
-                <div class="flex justify-between items-center mb-8 border-b border-zinc-800 pb-6">
-                    <h3 class="text-xl font-black text-white">Lista de Empleados</h3>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-zinc-800 pb-6">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
+                        <h3 class="text-xl font-black text-white">Lista de Empleados</h3>
+                        <div class="relative group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-500 transition-colors">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                            </svg>
+                            <input #search (input)="busquedaEmpleados.set(search.value)" type="text" placeholder="Buscar por nombre..." 
+                                class="bg-black border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:border-indigo-600 outline-none transition-all w-full md:w-64">
+                        </div>
+                    </div>
                     <button (click)="mostrarFormCrear.set(!mostrarFormCrear())"
                         class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all shadow-lg shadow-indigo-600/20">
                         {{ mostrarFormCrear() ? 'Cerrar Registro' : 'Añadir Empleado' }}
@@ -215,7 +224,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/30">
-                            @for (user of trabajadores(); track user.id) {
+                            @for (user of empleadosFiltrados(); track user.id) {
                             <tr class="group hover:bg-white/[0.02] transition-all cursor-pointer"
                                 [class.bg-indigo-600/5]="usuarioSeleccionado()?.id === user.id"
                                 (click)="verHistorial(user)">
@@ -403,41 +412,67 @@
                     </button>
                 </div>
 
-                <!-- Record Filters Advanced -->
+                <!-- Premium Calendar Filter -->
                 <div class="space-y-4 mb-8">
-                    <div class="flex gap-2 bg-zinc-900/50 p-1 rounded-2xl border border-zinc-800">
-                        <button (click)="cambiarFiltro('todos')"
-                            [class]="tipoFiltro() === 'todos' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500 hover:text-zinc-300'"
-                            class="flex-1 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all">Todos</button>
-                        <button (click)="cambiarFiltro('dia')"
-                            [class]="tipoFiltro() === 'dia' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'"
-                            class="flex-1 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all">Día</button>
-                        <button (click)="cambiarFiltro('semana')"
-                            [class]="tipoFiltro() === 'semana' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'"
-                            class="flex-1 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all">Semana</button>
-                        <button (click)="cambiarFiltro('mes')"
-                            [class]="tipoFiltro() === 'mes' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'"
-                            class="flex-1 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all">Mes</button>
-                    </div>
-
-                    @if (tipoFiltro() !== 'todos') {
-                        <div class="animate-in slide-in-from-top duration-300">
-                            <input #f [type]="tipoFiltro() === 'mes' ? 'month' : (tipoFiltro() === 'semana' ? 'week' : 'date')"
-                                [value]="fechaFiltro()"
-                                (input)="cambiarFechaFiltro(f.value)"
-                                class="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-600 outline-none transition-all">
+                    <div class="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-5">
+                        <div class="flex justify-between items-center mb-6 px-2">
+                            <h5 class="text-xs font-black uppercase tracking-widest text-indigo-500">
+                                {{ mesCalendario() | date:'MMMM yyyy' | titlecase }}
+                            </h5>
+                            <div class="flex gap-2">
+                                <button (click)="cambiarMes(-1)" class="h-8 w-8 rounded-xl bg-black border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <button (click)="cambiarMes(1)" class="h-8 w-8 rounded-xl bg-black border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
                         </div>
-                    }
+
+                        <div class="grid grid-cols-7 gap-1 mb-2">
+                            @for (dia of ['L','M','X','J','V','S','D']; track $index) {
+                                <div class="text-[9px] font-black text-zinc-600 text-center uppercase">{{ dia }}</div>
+                            }
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-1">
+                            @for (dia of diasDelMes; track dia.fecha.getTime()) {
+                                <button 
+                                    (click)="seleccionarDia(dia.fecha)"
+                                    [class.opacity-20]="!dia.enMesActual"
+                                    [class.bg-indigo-600]="estaEnRango(dia.fecha)"
+                                    [class.text-white]="estaEnRango(dia.fecha)"
+                                    [class.font-black]="estaEnRango(dia.fecha)"
+                                    [class.hover:bg-zinc-800]="!estaEnRango(dia.fecha)"
+                                    class="h-9 w-full rounded-lg text-[10px] flex flex-col items-center justify-center transition-all relative group"
+                                >
+                                    {{ dia.fecha.getDate() }}
+                                    @if (tieneRegistros(dia.fecha)) {
+                                        <span class="absolute bottom-1 h-1 w-1 rounded-full" 
+                                              [class]="estaEnRango(dia.fecha) ? 'bg-white' : 'bg-indigo-500'"></span>
+                                    }
+                                </button>
+                            }
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t border-zinc-800/50 flex justify-between items-center text-[10px] font-black uppercase text-zinc-500">
+                             <button (click)="tipoFiltro.set('todos'); rangoInicio.set(null); rangoFin.set(null)" 
+                                     class="hover:text-indigo-400 transition-colors">Limpiar Selección</button>
+                             <div class="flex gap-2">
+                                 <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span> Jornada</span>
+                             </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Goal Summary Card -->
-                @if (resumenPeriodo(); as res) {
+                @if (tipoFiltro() !== 'todos' && resumenPeriodo(); as res) {
                 <div class="mb-8 p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl relative overflow-hidden group">
                     <div class="flex justify-between items-end mb-4">
                         <div>
-                            <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Progreso del Periodo</p>
+                            <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Actividad en Selección</p>
                             <h5 class="text-2xl font-black text-white italic">
-                                {{ res.total.toFixed(1) }} <span class="text-xs text-zinc-600 not-italic">/ {{ res.objetivo.toFixed(1) }}h</span>
+                                {{ formatearTiempo(res.total) }} <span class="text-xs text-zinc-600 not-italic">/ {{ res.objetivo.toFixed(1) }}h</span>
                             </h5>
                         </div>
                         <div [class]="res.cumplido ? 'text-emerald-500' : 'text-orange-500'" class="text-[10px] font-black uppercase flex items-center gap-1.5">
@@ -492,7 +527,7 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-xs font-black text-zinc-500 uppercase mb-0.5 tracking-tighter">Total</p>
-                                <p class="text-xl font-black text-indigo-500">{{ reg.horasTrabajadas ?
+                                <p class="text-xl font-black text-indigo-500">{{ (reg.horasTrabajadas !== null && reg.horasTrabajadas !== undefined) ?
                                     reg.horasTrabajadas.toFixed(2) + 'h' : '--' }}</p>
                             </div>
                         </div>
@@ -519,11 +554,12 @@
                 </div>
 
                 <!-- Footer stats -->
+                @if (tipoFiltro() !== 'todos') {
                 <div class="mt-8 p-4 bg-indigo-600 rounded-2xl text-center shadow-lg shadow-indigo-600/20">
-                    <p class="text-[10px] font-black uppercase text-white/60 tracking-widest">Total Acumulado (Mes)</p>
-                    <p class="text-2xl font-black text-white italic">164.5<span
-                            class="text-xs ml-1 font-bold not-italic opacity-70">horas</span></p>
+                    <p class="text-[10px] font-black uppercase text-white/60 tracking-widest">Total Acumulado (Seleccionado)</p>
+                    <p class="text-2xl font-black text-white italic">{{ formatearTiempo(resumenPeriodo()?.total) }}</p>
                 </div>
+                }
             </div>
             }
         </div>

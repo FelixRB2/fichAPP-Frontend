@@ -25,6 +25,9 @@ export class PanelAdministrador implements OnInit {
   datosUsuario = signal<any>(null);
   fechaActual = signal(new Date());
 
+  // Búsqueda y filtrado de plantilla
+  busquedaEmpleados = signal('');
+
   // Lista de usuarios y filtrado
   trabajadores = this.authService.trabajadores;
   seccionActiva = signal<'resumen' | 'usuarios'>('usuarios');
@@ -34,9 +37,14 @@ export class PanelAdministrador implements OnInit {
   registrosUsuario = signal<Fichaje[]>([]);
   filtroTemporal = signal<'hoy' | 'semana' | 'mes' | 'todos'>('todos'); // Para compatibilidad
   
-  // Nuevos selectores detallados
-  tipoFiltro = signal<'dia' | 'semana' | 'mes' | 'todos'>('todos');
+  // Nuevos selectores detallados e INTERFAZ DE CALENDARIO
+  tipoFiltro = signal<'dia' | 'semana' | 'mes' | 'todos' | 'rango'>('todos');
   fechaFiltro = signal<string>(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+  
+  // Estado del nuevo calendario
+  mesCalendario = signal(new Date());
+  rangoInicio = signal<Date | null>(null);
+  rangoFin = signal<Date | null>(null);
 
   // UI - Creación y Edición de usuario
   mostrarFormCrear = signal(false);
@@ -64,6 +72,19 @@ export class PanelAdministrador implements OnInit {
     };
   });
 
+  // Empleados filtrados por búsqueda
+  empleadosFiltrados = computed(() => {
+    const q = this.busquedaEmpleados().toLowerCase().trim();
+    const lista = this.trabajadores();
+    if (!q) return lista;
+    
+    return lista.filter(u => 
+      u.nombre.toLowerCase().includes(q) || 
+      (u.apellido1 || '').toLowerCase().includes(q) || 
+      (u.apellido2 || '').toLowerCase().includes(q)
+    );
+  });
+
   // Registros filtrados dinámicos para el usuario seleccionado
   registrosFiltrados = computed(() => {
     const registros = this.registrosUsuario();
@@ -72,10 +93,18 @@ export class PanelAdministrador implements OnInit {
     if (!fechaRef || tipo === 'todos') return registros;
 
     const dRef = new Date(fechaRef);
+    const rIni = this.rangoInicio();
+    const rFin = this.rangoFin();
     
     return registros.filter(r => {
       const dReg = new Date(r.fecha);
+      dReg.setHours(0,0,0,0);
       
+      if (tipo === 'rango' && rIni) {
+        if (!rFin) return dReg.toDateString() === rIni.toDateString();
+        return dReg >= rIni && dReg <= rFin;
+      }
+
       if (tipo === 'dia') {
         return dReg.toDateString() === dRef.toDateString();
       }
@@ -130,6 +159,18 @@ export class PanelAdministrador implements OnInit {
       for (let i = 1; i <= totalDias; i++) {
         const diaSemana = new Date(año, mes, i).getDay();
         if (diaSemana !== 0 && diaSemana !== 6) diasLaborables++;
+      }
+      horasObjetivo = (horasSemanales / 5) * diasLaborables;
+    } else if (tipo === 'rango' && this.rangoInicio()) {
+      const inicio = this.rangoInicio()!;
+      const fin = this.rangoFin() || inicio;
+      // Contar días laborables en el rango
+      let diasLaborables = 0;
+      let curr = new Date(inicio);
+      while (curr <= fin) {
+        const ds = curr.getDay();
+        if (ds !== 0 && ds !== 6) diasLaborables++;
+        curr.setDate(curr.getDate() + 1);
       }
       horasObjetivo = (horasSemanales / 5) * diasLaborables;
     }
@@ -277,6 +318,99 @@ export class PanelAdministrador implements OnInit {
     const minutos = minutosTotales % 60;
     if (horas === 0) return `${minutos}m`;
     return `${horas}h ${minutos.toString().padStart(2, '0')}m`;
+  }
+
+  // --- Lógica de Calendario ---
+  get diasDelMes() {
+    const mes = this.mesCalendario();
+    const año = mes.getFullYear();
+    const m = mes.getMonth();
+    
+    const primerDia = new Date(año, m, 1);
+    const ultimoDia = new Date(año, m + 1, 0);
+    
+    // Ajuste para que lunes sea el primer día (0:dom, 1:lun...) -> (0:lun, 6:dom)
+    let startDay = primerDia.getDay() - 1;
+    if (startDay === -1) startDay = 6;
+    
+    const dias = [];
+    
+    // Días del mes anterior para completar la primera semana
+    const ultimoMesPasado = new Date(año, m, 0);
+    for (let i = startDay - 1; i >= 0; i--) {
+      dias.push({
+        fecha: new Date(año, m - 1, ultimoMesPasado.getDate() - i),
+        enMesActual: false
+      });
+    }
+    
+    // Días del mes actual
+    for (let i = 1; i <= ultimoDia.getDate(); i++) {
+      dias.push({
+        fecha: new Date(año, m, i),
+        enMesActual: true
+      });
+    }
+    
+    // Días del mes siguiente para completar la cuadrícula (6 filas x 7 días = 42)
+    const padding = 42 - dias.length;
+    for (let i = 1; i <= padding; i++) {
+      dias.push({
+        fecha: new Date(año, m + 1, i),
+        enMesActual: false
+      });
+    }
+    
+    return dias;
+  }
+
+  cambiarMes(delta: number) {
+    const nuevo = new Date(this.mesCalendario());
+    nuevo.setMonth(nuevo.getMonth() + delta);
+    this.mesCalendario.set(nuevo);
+  }
+
+  seleccionarDia(dia: Date) {
+    const fecha = new Date(dia);
+    fecha.setHours(0,0,0,0);
+
+    const inicio = this.rangoInicio();
+    const fin = this.rangoFin();
+
+    if (!inicio || (inicio && fin)) {
+      // Nueva selección
+      this.rangoInicio.set(fecha);
+      this.rangoFin.set(null);
+      this.tipoFiltro.set('rango');
+    } else {
+      // Seleccionando el fin del rango
+      if (fecha < inicio) {
+        this.rangoFin.set(inicio);
+        this.rangoInicio.set(fecha);
+      } else {
+        this.rangoFin.set(fecha);
+      }
+    }
+  }
+
+  estaEnRango(dia: Date): boolean {
+    const d = new Date(dia);
+    d.setHours(0,0,0,0);
+    const ini = this.rangoInicio();
+    const fin = this.rangoFin();
+    if (!ini) return false;
+    if (!fin) return d.getTime() === ini.getTime();
+    return d >= ini && d <= fin;
+  }
+
+  tieneRegistros(dia: Date): boolean {
+    // Formatear a YYYY-MM-DD local manualmente para evitar desfases de zona horaria
+    const y = dia.getFullYear();
+    const m = (dia.getMonth() + 1).toString().padStart(2, '0');
+    const d = dia.getDate().toString().padStart(2, '0');
+    const dStrLocal = `${y}-${m}-${d}`;
+    
+    return this.registrosUsuario().some(r => r.fecha === dStrLocal);
   }
 }
 
