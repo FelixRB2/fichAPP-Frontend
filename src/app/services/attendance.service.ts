@@ -42,4 +42,28 @@ export class AttendanceService {
       porcentajeSemanal: datos.weeklyPercentage || 0
     };
   }
+
+  async solicitarCorreccion(idFichaje: string, horaEntrada: string, horaSalida: string, comentario: string): Promise<Fichaje> {
+    return await firstValueFrom(
+      this.http.post<Fichaje>(`${this.baseUrl}/${idFichaje}/solicitar-correccion`, { 
+        horaEntrada, 
+        horaSalida, 
+        comentario 
+      })
+    );
+  }
+
+  async obtenerPendientesRevision(): Promise<Fichaje[]> {
+    return await firstValueFrom(
+      this.http.get<Fichaje[]>(`${this.baseUrl}/pendientes-revision`)
+    );
+  }
+
+  async resolverCorreccion(idFichaje: string, aprobado: boolean): Promise<Fichaje> {
+    return await firstValueFrom(
+      this.http.put<Fichaje>(`${this.baseUrl}/${idFichaje}/resolver-correccion`, {}, {
+        params: { aprobado: aprobado.toString() }
+      })
+    );
+  }
 }

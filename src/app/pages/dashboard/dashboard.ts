@@ -1,16 +1,18 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, UpperCasePipe, NgClass, TitleCasePipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { AttendanceService } from '../../services/attendance.service';
 import { Router } from '@angular/router';
 import { Fichaje } from '../../interface/attendance';
+import { FormsModule } from '@angular/forms';
 
 import { Sidebar } from '../admin/sidebar';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, UpperCasePipe, NgClass, TitleCasePipe, CommonModule, Sidebar],
+  imports: [DatePipe, UpperCasePipe, NgClass, TitleCasePipe, CommonModule, Sidebar, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -27,6 +29,15 @@ export class PanelControl implements OnInit {
   
   historial = signal<Fichaje[]>([]);
   filtroTemporal = signal<'hoy' | 'semana' | 'mes' | 'todos'>('todos');
+
+  // UI - Solicitud de Corrección
+  mostrarModalCorreccion = signal(false);
+  fichajeSeleccionado = signal<Fichaje | null>(null);
+  propuesta = signal({
+    nuevaEntrada: '',
+    nuevaSalida: '',
+    comentario: ''
+  });
 
   // Historial filtrado dinámico
   historialFiltrado = computed(() => {
@@ -146,6 +157,13 @@ export class PanelControl implements OnInit {
     return num.toString().padStart(2, '0');
   }
 
+  private formatTime(time: string | null): string | null {
+    if (!time) return null;
+    // Si el formato es HH:mm, añadimos :00
+    if (time.length === 5) return `${time}:00`;
+    return time;
+  }
+
   formatearTiempo(valor: number | null | undefined): string {
     if (valor === null || valor === undefined) return '--:--';
     const minutosTotales = Math.round(valor * 60);
@@ -158,5 +176,60 @@ export class PanelControl implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  // --- Lógica de Correcciones ---
+  abrirModalCorreccion(fichaje: Fichaje) {
+    this.fichajeSeleccionado.set(fichaje);
+    this.propuesta.set({
+      nuevaEntrada: fichaje.horaEntrada,
+      nuevaSalida: fichaje.horaSalida || '',
+      comentario: ''
+    });
+    this.mostrarModalCorreccion.set(true);
+  }
+
+  async enviarSolicitud() {
+    const data = this.propuesta();
+    const fichaje = this.fichajeSeleccionado();
+    const idUsuario = this.authService.getUserId();
+
+    if (!fichaje || !idUsuario || !data.comentario.trim()) {
+      alert('El comentario es obligatorio para solicitar una corrección.');
+      return;
+    }
+
+    try {
+      const requestData = {
+        nuevaHoraEntrada: this.formatTime(data.nuevaEntrada),
+        nuevaHoraSalida: this.formatTime(data.nuevaSalida),
+        comentario: data.comentario
+      };
+
+      if (!requestData.nuevaHoraEntrada) {
+        alert('La hora de entrada es obligatoria.');
+        return;
+      }
+
+      await this.attendanceService.solicitarCorreccion(
+        fichaje.idFichajes,
+        requestData.nuevaHoraEntrada,
+        requestData.nuevaHoraSalida || '',
+        requestData.comentario
+      );
+      
+      this.mostrarModalCorreccion.set(false);
+      alert('Solicitud de corrección enviada correctamente.');
+      await this.cargarDatos();
+    } catch (error) {
+      console.error('Error al enviar corrección:', error);
+      let mensaje = 'No se ha podido procesar la solicitud.';
+      
+      if (error instanceof HttpErrorResponse) {
+        mensaje = error.error || mensaje;
+      }
+
+      alert('Error: ' + mensaje);
+    }
   }
 }

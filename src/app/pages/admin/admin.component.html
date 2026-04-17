@@ -36,6 +36,26 @@
                     </svg>
                     Plantilla
                 </button>
+                <button (click)="cambiarSeccion('solicitudes')"
+                    [class]="seccionActiva() === 'solicitudes' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300'"
+                    class="px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
+                    <div class="relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-clipboard-check">
+                            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <path d="m9 14 2 2 4-4"/>
+                        </svg>
+                        @if (solicitudesPendientes().length > 0) {
+                            <span class="absolute -top-1 -right-1 flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                        }
+                    </div>
+                    Solicitudes
+                </button>
             </div>
         </header>
 
@@ -121,7 +141,7 @@
             <p class="text-zinc-500 max-w-md mx-auto">Selecciona la sección de <b>Plantilla</b> para gestionar cada
                 perfil individualmente y ver sus registros.</p>
         </div>
-        } @else {
+        } @else if (seccionActiva() === 'usuarios') {
         <!-- User Management Content (Plantilla) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom duration-500">
             <div [class]="usuarioSeleccionado() ? 'lg:col-span-2' : 'lg:col-span-3'"
@@ -500,9 +520,16 @@
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-xs font-black text-zinc-500 uppercase tracking-widest">{{ reg.fecha |
                                 date:'dd MMM yyyy' }}</span>
-                            <div class="px-3 py-1 rounded-lg bg-black text-[10px] font-black uppercase tracking-tighter"
-                                [class]="reg.horaSalida ? 'text-emerald-500 shadow-sm shadow-emerald-500/10' : 'text-orange-500 shadow-sm shadow-orange-500/10 animate-pulse'">
-                                {{ reg.horaSalida ? 'Completado' : 'Sesión Activa' }}
+                            <div class="flex items-center gap-2">
+                                @if (reg.estado === 'pendiente_revision') {
+                                    <span class="px-3 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-black uppercase tracking-tighter animate-pulse">
+                                        Pendiente de Revisión
+                                    </span>
+                                }
+                                <div class="px-3 py-1 rounded-lg bg-black text-[10px] font-black uppercase tracking-tighter"
+                                    [class]="reg.horaSalida ? 'text-emerald-500 shadow-sm shadow-emerald-500/10' : 'text-orange-500 shadow-sm shadow-orange-500/10 animate-pulse'">
+                                    {{ reg.horaSalida ? 'Completado' : 'Sesión Activa' }}
+                                </div>
                             </div>
                         </div>
 
@@ -515,9 +542,19 @@
                                         <circle cx="12" cy="12" r="10" />
                                         <polyline points="12 6 12 12 16 14" />
                                     </svg>
-                                    <p class="text-lg font-black text-white tracking-widest font-mono">{{
-                                        reg.horaEntrada }} <span class="text-zinc-800">→</span> {{ reg.horaSalida ||
-                                        'PR' }}</p>
+                                    @if (reg.estado === 'pendiente_revision') {
+                                        <div class="flex flex-col">
+                                            <p class="text-[10px] font-black text-zinc-600 uppercase mb-1">Propuesta de cambio:</p>
+                                            <p class="text-lg font-black text-white tracking-widest font-mono">
+                                                <span class="text-zinc-500 line-through mr-2 opacity-50">{{ reg.horaEntrada }} → {{ reg.horaSalida || '??:??' }}</span>
+                                                <span class="text-indigo-400">{{ reg.horaEntradaPropuesta }} → {{ reg.horaSalidaPropuesta || '??:??' }}</span>
+                                            </p>
+                                        </div>
+                                    } @else {
+                                        <p class="text-lg font-black text-white tracking-widest font-mono">{{
+                                            reg.horaEntrada }} <span class="text-zinc-800">→</span> {{ reg.horaSalida ||
+                                            'PR' }}</p>
+                                    }
                                 </div>
                                 @if (reg.comentario) {
                                 <p
@@ -525,10 +562,24 @@
                                     "{{ reg.comentario }}"</p>
                                 }
                             </div>
-                            <div class="text-right">
-                                <p class="text-xs font-black text-zinc-500 uppercase mb-0.5 tracking-tighter">Total</p>
-                                <p class="text-xl font-black text-indigo-500">{{ (reg.horasTrabajadas !== null && reg.horasTrabajadas !== undefined) ?
-                                    reg.horasTrabajadas.toFixed(2) + 'h' : '--' }}</p>
+                            <div class="flex flex-col items-end gap-3">
+                                @if (reg.estado === 'pendiente_revision') {
+                                    <div class="flex gap-2">
+                                        <button (click)="$event.stopPropagation(); resolverCorreccionDirecta(reg, false)" 
+                                            class="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase">
+                                            Rechazar
+                                        </button>
+                                        <button (click)="$event.stopPropagation(); resolverCorreccionDirecta(reg, true)" 
+                                            class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 transition-all text-[10px] font-black uppercase">
+                                            Aprobar
+                                        </button>
+                                    </div>
+                                }
+                                <div class="text-right">
+                                    <p class="text-xs font-black text-zinc-500 uppercase mb-0.5 tracking-tighter">Total</p>
+                                    <p class="text-xl font-black text-indigo-500">{{ (reg.horasTrabajadas !== null && reg.horasTrabajadas !== undefined) ?
+                                        reg.horasTrabajadas.toFixed(2) + 'h' : '--' }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -562,6 +613,80 @@
                 }
             </div>
             }
+        </div>
+        } @else if (seccionActiva() === 'solicitudes') {
+        <!-- Solicitudes de Revisión -->
+        <div class="animate-in slide-in-from-bottom duration-500">
+            <div class="mb-8 p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-3xl flex items-center gap-4">
+                <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-white">Validación de Solicitudes</h3>
+                    <p class="text-xs text-indigo-400 font-bold uppercase tracking-widest">Revisión de Correcciones</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                @for (sol of solicitudesPendientes(); track sol.idSolicitud) {
+                <div class="bg-zinc-900/40 border border-zinc-800/50 rounded-[2.5rem] p-8 flex flex-col md:flex-row gap-8 items-start md:items-center group hover:border-indigo-500/30 transition-all">
+                    <!-- User Info -->
+                    <div class="flex items-center gap-4 min-w-[200px]">
+                        <div class="h-12 w-12 rounded-full bg-indigo-600/10 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/20">
+                            {{ sol.usuario.nombre.charAt(0) }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-white leading-none mb-1">{{ sol.usuario.nombre }} {{ sol.usuario.apellido1 }}</p>
+                            <span class="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{{ sol.tipo.replace('_', ' ') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Comparison -->
+                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-8 bg-black/40 p-6 rounded-3xl border border-zinc-800/30">
+                        <div>
+                            <p class="text-[10px] text-zinc-500 uppercase font-black mb-2 tracking-widest">Hora Actual</p>
+                            <div class="flex items-center gap-3">
+                                <span class="text-zinc-400 line-through text-lg font-mono">{{ sol.fichajeRef?.horaEntrada }}</span>
+                                <span class="text-zinc-600">→</span>
+                                <span class="text-zinc-400 line-through text-lg font-mono">{{ sol.fichajeRef?.horaSalida || '??:??' }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-emerald-500 uppercase font-black mb-2 tracking-widest">Propuesta del Empleado</p>
+                            <div class="flex items-center gap-3">
+                                <span class="text-white text-xl font-mono font-black">{{ sol.horaEntradaPropuesta }}</span>
+                                <span class="text-emerald-500">→</span>
+                                <span class="text-white text-xl font-mono font-black">{{ sol.horaSalidaPropuesta }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comentario -->
+                    <div class="md:max-w-xs w-full">
+                        <p class="text-[10px] text-zinc-500 uppercase font-black mb-2 tracking-widest">Motivo / Comentario</p>
+                        <p class="text-sm text-zinc-300 italic">"{{ sol.comentario }}"</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3">
+                        <button (click)="resolverSolicitud(sol, false)" class="h-12 w-12 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center group/btn shadow-lg shadow-red-500/5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                        <button (click)="resolverSolicitud(sol, true)" class="h-12 px-6 rounded-2xl bg-emerald-500 text-black font-black uppercase text-xs tracking-tighter hover:bg-emerald-400 hover:scale-105 transition-all shadow-lg shadow-emerald-500/20">
+                            Aprobar
+                        </button>
+                    </div>
+                </div>
+                } @empty {
+                <div class="bg-zinc-900/10 border border-zinc-800/50 rounded-[3rem] p-24 text-center border-dashed">
+                    <div class="h-24 w-24 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-800 mx-auto mb-6 border border-zinc-800 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-10"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+                    </div>
+                    <h4 class="text-xl font-black text-zinc-600 mb-2">Todo en orden</h4>
+                    <p class="text-zinc-700 text-sm italic">No hay solicitudes pendientes de revisión.</p>
+                </div>
+                }
+            </div>
         </div>
         }
     </div>

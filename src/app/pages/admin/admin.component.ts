@@ -7,6 +7,8 @@ import { User } from 'src/app/interface/user';
 import { Fichaje } from 'src/app/interface/attendance';
 
 import { Sidebar } from './sidebar';
+import { SolicitudService } from '../../services/solicitud.service';
+import { Solicitud } from '../../interface/attendance';
 
 import { FormsModule } from '@angular/forms';
 
@@ -20,6 +22,7 @@ import { FormsModule } from '@angular/forms';
 export class PanelAdministrador implements OnInit {
   private authService = inject(AuthService);
   private attendanceService = inject(AttendanceService);
+  private solicitudService = inject(SolicitudService);
   private enrutador = inject(Router);
 
   datosUsuario = signal<any>(null);
@@ -30,7 +33,10 @@ export class PanelAdministrador implements OnInit {
 
   // Lista de usuarios y filtrado
   trabajadores = this.authService.trabajadores;
-  seccionActiva = signal<'resumen' | 'usuarios'>('usuarios');
+  seccionActiva = signal<'resumen' | 'usuarios' | 'solicitudes'>('usuarios');
+  
+  // Solicitudes de modificación
+  solicitudesPendientes = signal<Solicitud[]>([]);
 
   // Detalle de usuario seleccionado
   usuarioSeleccionado = signal<User | null>(null);
@@ -187,6 +193,7 @@ export class PanelAdministrador implements OnInit {
     this.datosUsuario.set(this.authService.getUserData());
     setInterval(() => this.fechaActual.set(new Date()), 1000);
     await this.cargarUsuarios();
+    await this.cargarSolicitudes();
   }
 
   async cargarUsuarios() {
@@ -293,9 +300,10 @@ export class PanelAdministrador implements OnInit {
   
 
   // --- UI Helpers ---
-  cambiarSeccion(seccion: 'resumen' | 'usuarios') {
+  cambiarSeccion(seccion: 'resumen' | 'usuarios' | 'solicitudes') {
     this.seccionActiva.set(seccion);
     if (seccion === 'resumen') this.usuarioSeleccionado.set(null);
+    if (seccion === 'solicitudes') this.cargarSolicitudes();
   }
 
   cambiarFiltro(nuevoFiltro: 'dia' | 'semana' | 'mes' | 'todos') {
@@ -411,6 +419,73 @@ export class PanelAdministrador implements OnInit {
     const dStrLocal = `${y}-${m}-${d}`;
     
     return this.registrosUsuario().some(r => r.fecha === dStrLocal);
+  }
+
+  // --- Gestión de Solicitudes ---
+  async cargarSolicitudes() {
+    try {
+      // 1. Cargar solicitudes tradicionales (Vacaciones, etc.)
+      const solicitudes = await this.solicitudService.obtenerPendientes();
+      
+      // 2. Cargar correcciones desde la tabla de fichajes
+      const fichajesPendientes = await this.attendanceService.obtenerPendientesRevision();
+      
+      // 3. Mapear fichajes a formato solicitud para la UI
+      const correccionesMapeadas: any[] = fichajesPendientes.map(f => ({
+        idSolicitud: f.idFichajes, // Usamos el ID del fichaje
+        usuario: f.usuario,
+        tipo: 'correccion_fichaje',
+        estado: 'pendiente',
+        comentario: f.comentario,
+        horaEntradaPropuesta: f.horaEntradaPropuesta,
+        horaSalidaPropuesta: f.horaSalidaPropuesta,
+        fichajeRef: f,
+        esFichajeDirecto: true // Bandera para saber que viene de fichajes
+      }));
+
+      // 4. Combinar ambas listas
+      this.solicitudesPendientes.set([...solicitudes, ...correccionesMapeadas]);
+    } catch (error) {
+      console.error('Error cargando solicitudes:', error);
+    }
+  }
+
+  async resolverSolicitud(solicitud: any, aprobado: boolean) {
+    const adminId = this.authService.getUserId();
+    if (!adminId) return;
+
+    try {
+      if (solicitud.esFichajeDirecto) {
+        // Resolver directamente en la tabla de fichajes
+        await this.attendanceService.resolverCorreccion(solicitud.idSolicitud, aprobado);
+      } else {
+        // Resolver en la tabla de solicitudes tradicional
+        await this.solicitudService.resolverSolicitud(solicitud.idSolicitud, aprobado, adminId);
+      }
+      
+      alert(aprobado ? 'Solicitud aprobada' : 'Solicitud rechazada');
+      await this.cargarSolicitudes(); // Recargar lista
+    } catch (error) {
+      alert('Error al procesar la solicitud: ' + error);
+    }
+  }
+
+  async resolverCorreccionDirecta(fichaje: Fichaje, aprobado: boolean) {
+    try {
+      await this.attendanceService.resolverCorreccion(fichaje.idFichajes, aprobado);
+      alert(aprobado ? 'Corrección aplicada' : 'Corrección rechazada');
+      
+      // Recargar el historial del usuario seleccionado para ver los cambios
+      const usuario = this.usuarioSeleccionado();
+      if (usuario) {
+        await this.verHistorial(usuario);
+      }
+      
+      // También refrescar la lista global de solicitudes
+      await this.cargarSolicitudes();
+    } catch (error) {
+      alert('Error al procesar la corrección: ' + error);
+    }
   }
 }
 
